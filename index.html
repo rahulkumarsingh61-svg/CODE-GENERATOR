@@ -248,22 +248,21 @@
 
       btn.disabled = true;
       btn.textContent = "Generating...";
-      status.textContent = "Generating code...";
+      status.textContent = "Sending request to Gemini...";
 
-      document.getElementById('htmlCode').textContent = "Writing HTML code...";
-      document.getElementById('javaCode').textContent = "Writing Java code...";
-      document.getElementById('pythonCode').textContent = "Writing Python code...";
+      document.getElementById('htmlCode').textContent = "Generating HTML...";
+      document.getElementById('javaCode').textContent = "Generating Java...";
+      document.getElementById('pythonCode').textContent = "Generating Python...";
 
       const promptText = `Generate working, functional code for this idea: "${idea}".
-Provide implementations for HTML (with inline CSS/JS), Java, and Python.`;
+Return your response ONLY as valid JSON matching the schema with keys "html", "java", and "python".`;
 
       try {
         const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "x-goog-api-key": GEMINI_API_KEY,
-            "Authorization": `Bearer ${GEMINI_API_KEY}`
+            "x-goog-api-key": GEMINI_API_KEY
           },
           body: JSON.stringify({
             contents: [{ parts: [{ text: promptText }] }],
@@ -299,7 +298,6 @@ Provide implementations for HTML (with inline CSS/JS), Java, and Python.`;
       } catch (err) {
         console.error(err);
         status.textContent = "Error occurred.";
-        alert("API Error: " + err.message);
         document.getElementById('htmlCode').textContent = "Error: " + err.message;
         document.getElementById('javaCode').textContent = "Error: " + err.message;
         document.getElementById('pythonCode').textContent = "Error: " + err.message;
