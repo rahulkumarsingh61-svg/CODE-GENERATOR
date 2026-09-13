@@ -255,7 +255,7 @@
       document.getElementById('pythonCode').textContent = "Generating Python...";
 
       const promptText = `Generate complete working code for: "${idea}".
-Return strictly a valid JSON object without markdown fences, comments, or extra prose.
+Return strictly a valid raw JSON object without markdown fences, comments, or backticks.
 Format:
 {"html": "<complete html code>", "java": "<complete java code>", "python": "<complete python code>"}`;
 
