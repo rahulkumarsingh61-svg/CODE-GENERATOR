@@ -244,11 +244,11 @@
           "Authorization": `Bearer ${GROQ_API_KEY}`
         },
         body: JSON.stringify({
-          model: "openai/gpt-oss-120b",
+          model: "llama-3.3-70b-versatile",
           messages: [
             {
               role: "system",
-              content: "You are an expert programming assistant. Return ONLY valid, executable raw code for the requested language. Do NOT write conversational explanations, and do NOT enclose output in markdown blocks or backticks."
+              content: "You are an expert programming assistant. Return ONLY the raw code for the requested language. Do NOT use markdown code blocks (no ``` backticks), and do NOT add any conversational explanation."
             },
             {
               role: "user",
@@ -287,8 +287,9 @@
       document.getElementById('pythonCode').textContent = "Generating Python...";
 
       try {
-        status.textContent = "Generating code with Groq...";
+        status.textContent = "Generating HTML, Java & Python with Llama 3.3...";
 
+        // Groq processes requests fast, so all 3 generate in parallel
         const [htmlCode, javaCode, pythonCode] = await Promise.all([
           requestGroqCode("HTML/CSS/JS (single file)", idea),
           requestGroqCode("Java", idea),
@@ -302,7 +303,7 @@
       } catch (err) {
         console.error(err);
         status.textContent = "Error occurred.";
-        alert("Error: " + err.message);
+        alert("Groq Error: " + err.message);
         document.getElementById('htmlCode').textContent = "Error: " + err.message;
         document.getElementById('javaCode').textContent = "Error: " + err.message;
         document.getElementById('pythonCode').textContent = "Error: " + err.message;
