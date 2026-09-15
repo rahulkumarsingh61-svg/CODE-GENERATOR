@@ -238,7 +238,7 @@
 
     async function requestLanguageCode(language, idea) {
       const prompt = `Write complete, self-contained, working ${language} code for: "${idea}". 
-Return ONLY the raw code. Do NOT wrap with markdown backticks or explanations.`;
+Return ONLY the raw code. Do NOT wrap with markdown fences or extra conversational text.`;
 
       const response = await fetch(PROXY_URL, {
         method: "POST",
@@ -270,29 +270,26 @@ Return ONLY the raw code. Do NOT wrap with markdown backticks or explanations.`;
 
       btn.disabled = true;
       btn.textContent = "Generating...";
-      status.textContent = "Generating HTML...";
-
+      
       document.getElementById('htmlCode').textContent = "Generating HTML...";
-      document.getElementById('javaCode').textContent = "Waiting...";
-      document.getElementById('pythonCode').textContent = "Waiting...";
+      document.getElementById('javaCode').textContent = "Queued...";
+      document.getElementById('pythonCode').textContent = "Queued...";
 
       try {
-        // Generate HTML first so results appear quickly
+        status.textContent = "Generating HTML...";
         const htmlCode = await requestLanguageCode("HTML/JS/CSS", idea);
         document.getElementById('htmlCode').textContent = htmlCode;
 
-        status.textContent = "Generating Java & Python...";
+        status.textContent = "Generating Java...";
         document.getElementById('javaCode').textContent = "Generating Java...";
-        document.getElementById('pythonCode').textContent = "Generating Python...";
-
-        // Generate Java and Python in parallel
-        const [javaCode, pythonCode] = await Promise.all([
-          requestLanguageCode("Java", idea),
-          requestLanguageCode("Python", idea)
-        ]);
-
+        const javaCode = await requestLanguageCode("Java", idea);
         document.getElementById('javaCode').textContent = javaCode;
+
+        status.textContent = "Generating Python...";
+        document.getElementById('pythonCode').textContent = "Generating Python...";
+        const pythonCode = await requestLanguageCode("Python", idea);
         document.getElementById('pythonCode').textContent = pythonCode;
+
         status.textContent = "Complete!";
       } catch (err) {
         status.textContent = "Error occurred.";
