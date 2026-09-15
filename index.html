@@ -236,6 +236,28 @@
       });
     }
 
+    async function requestLanguageCode(language, idea) {
+      const prompt = `Write complete, self-contained, working ${language} code for: "${idea}". 
+Return ONLY the raw code. Do NOT wrap with markdown backticks or explanations.`;
+
+      const response = await fetch(PROXY_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { maxOutputTokens: 2048, temperature: 0.2 }
+        })
+      });
+
+      const data = await response.json();
+      if (data.error) {
+        throw new Error(data.error.message);
+      }
+
+      let text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
+      return text.replace(/^```[a-zA-Z]*\n?/, "").replace(/\n?```$/, "").trim();
+    }
+
     async function generateCode() {
       const idea = document.getElementById('ideaInput').value.trim();
       const btn = document.getElementById('genBtn');
@@ -248,59 +270,33 @@
 
       btn.disabled = true;
       btn.textContent = "Generating...";
-      status.textContent = "Connecting to Gemini...";
+      status.textContent = "Generating HTML...";
 
       document.getElementById('htmlCode').textContent = "Generating HTML...";
-      document.getElementById('javaCode').textContent = "Generating Java...";
-      document.getElementById('pythonCode').textContent = "Generating Python...";
-
-      const promptText = `Generate complete working code for: "${idea}".
-Return strictly a valid raw JSON object without markdown fences, comments, or backticks.
-Format:
-{"html": "<complete html code>", "java": "<complete java code>", "python": "<complete python code>"}`;
+      document.getElementById('javaCode').textContent = "Waiting...";
+      document.getElementById('pythonCode').textContent = "Waiting...";
 
       try {
-        const response = await fetch(PROXY_URL, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: promptText }] }]
-          })
-        });
+        // Generate HTML first so results appear quickly
+        const htmlCode = await requestLanguageCode("HTML/JS/CSS", idea);
+        document.getElementById('htmlCode').textContent = htmlCode;
 
-        const data = await response.json();
+        status.textContent = "Generating Java & Python...";
+        document.getElementById('javaCode').textContent = "Generating Java...";
+        document.getElementById('pythonCode').textContent = "Generating Python...";
 
-        if (data.error) {
-          throw new Error(data.error.message);
-        }
+        // Generate Java and Python in parallel
+        const [javaCode, pythonCode] = await Promise.all([
+          requestLanguageCode("Java", idea),
+          requestLanguageCode("Python", idea)
+        ]);
 
-        let rawText = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
-        if (!rawText) {
-          throw new Error("No response returned from the model.");
-        }
-
-        if (rawText.startsWith("```json")) {
-          rawText = rawText.replace(/^```json/, "").replace(/```$/, "").trim();
-        } else if (rawText.startsWith("```")) {
-          rawText = rawText.replace(/^```/, "").replace(/```$/, "").trim();
-        }
-
-        const parsed = JSON.parse(rawText);
-
-        document.getElementById('htmlCode').textContent = parsed.html || "No HTML code returned.";
-        document.getElementById('javaCode').textContent = parsed.java || "No Java code returned.";
-        document.getElementById('pythonCode').textContent = parsed.python || "No Python code returned.";
-        status.textContent = "Generated successfully!";
-
+        document.getElementById('javaCode').textContent = javaCode;
+        document.getElementById('pythonCode').textContent = pythonCode;
+        status.textContent = "Complete!";
       } catch (err) {
-        console.error(err);
         status.textContent = "Error occurred.";
         alert("Error: " + err.message);
-        document.getElementById('htmlCode').textContent = "Error: " + err.message;
-        document.getElementById('javaCode').textContent = "Error: " + err.message;
-        document.getElementById('pythonCode').textContent = "Error: " + err.message;
       } finally {
         btn.disabled = false;
         btn.textContent = "Generate Code";
