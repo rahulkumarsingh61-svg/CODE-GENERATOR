@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TriStack AI & Code Assistant</title>
+  <title>TriStack AI - Multi-Language Code Generator</title>
   <style>
     :root {
       --bg: #0f172a;
@@ -13,8 +13,6 @@
       --muted: #94a3b8;
       --code-bg: #0b1120;
       --border: #334155;
-      --user-msg: #0284c7;
-      --bot-msg: #334155;
     }
 
     * {
@@ -28,78 +26,57 @@
       background-color: var(--bg);
       color: var(--text);
       min-height: 100vh;
+      padding: 2rem 1rem;
+      display: flex;
+      justify-content: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 900px;
       display: flex;
       flex-direction: column;
+      gap: 1.5rem;
     }
 
     header {
-      padding: 1rem 1.5rem;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: var(--card);
+      text-align: center;
     }
 
     header h1 {
-      font-size: 1.4rem;
+      font-size: 2rem;
       color: var(--accent);
+      margin-bottom: 0.5rem;
     }
 
     header p {
       color: var(--muted);
-      font-size: 0.85rem;
     }
 
-    /* 50/50 Split Screen Container */
-    .app-layout {
-      display: flex;
-      flex: 1;
-      height: calc(100vh - 65px);
-      overflow: hidden;
-    }
-
-    /* Left Pane: Generator */
-    .pane-generator {
-      width: 50%;
-      padding: 1.25rem;
-      overflow-y: auto;
-      border-right: 1px solid var(--border);
+    .input-card {
+      background-color: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
       display: flex;
       flex-direction: column;
       gap: 1rem;
     }
 
-    /* Right Pane: Chat Assistant */
-    .pane-chat {
-      width: 50%;
-      display: flex;
-      flex-direction: column;
-      background: #111827;
-      height: 100%;
-    }
-
-    .card {
-      background-color: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 1rem;
-    }
-
     textarea {
       width: 100%;
-      height: 80px;
+      height: 100px;
       background: var(--code-bg);
       border: 1px solid var(--border);
       border-radius: 8px;
       color: var(--text);
       padding: 0.75rem;
-      font-size: 0.95rem;
+      font-size: 1rem;
       resize: vertical;
       outline: none;
     }
 
-    textarea:focus, input:focus {
+    textarea:focus {
       border-color: var(--accent);
     }
 
@@ -107,26 +84,25 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-top: 0.75rem;
     }
 
     .status-text {
-      font-size: 0.85rem;
+      font-size: 0.9rem;
       color: var(--muted);
     }
 
-    button.primary-btn {
+    button.generate-btn {
       background: var(--accent);
       color: #000;
       border: none;
-      padding: 0.6rem 1.25rem;
+      padding: 0.75rem 1.5rem;
       border-radius: 8px;
       font-weight: 600;
       cursor: pointer;
       transition: opacity 0.2s;
     }
 
-    button.primary-btn:disabled {
+    button.generate-btn:disabled {
       opacity: 0.5;
       cursor: not-allowed;
     }
@@ -134,11 +110,8 @@
     .output-card {
       background-color: var(--card);
       border: 1px solid var(--border);
-      border-radius: 10px;
+      border-radius: 12px;
       overflow: hidden;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
     }
 
     .tabs {
@@ -148,12 +121,12 @@
     }
 
     .tab-btn {
-      padding: 0.6rem 1.25rem;
+      padding: 0.75rem 1.5rem;
       background: none;
       border: none;
       color: var(--muted);
       cursor: pointer;
-      font-size: 0.9rem;
+      font-size: 0.95rem;
       border-bottom: 2px solid transparent;
     }
 
@@ -166,7 +139,6 @@
     .tab-panel {
       display: none;
       position: relative;
-      flex: 1;
     }
 
     .tab-panel.active {
@@ -175,14 +147,14 @@
 
     .copy-btn {
       position: absolute;
-      top: 8px;
-      right: 12px;
+      top: 10px;
+      right: 15px;
       background: var(--border);
       color: var(--text);
       border: none;
       border-radius: 6px;
-      padding: 0.3rem 0.65rem;
-      font-size: 0.75rem;
+      padding: 0.35rem 0.75rem;
+      font-size: 0.8rem;
       cursor: pointer;
     }
 
@@ -193,164 +165,61 @@
 
     pre {
       background: var(--code-bg);
-      padding: 1rem;
-      overflow: auto;
-      height: 100%;
-      max-height: 480px;
+      padding: 1.25rem;
+      overflow-x: auto;
+      min-height: 250px;
     }
 
     code {
       font-family: 'Courier New', Courier, monospace;
-      font-size: 0.88rem;
+      font-size: 0.95rem;
       color: #38bdf8;
       white-space: pre-wrap;
-    }
-
-    /* Chat Elements */
-    .chat-header {
-      padding: 0.85rem 1.25rem;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: var(--card);
-    }
-
-    .chat-header span {
-      font-weight: 600;
-      font-size: 0.95rem;
-    }
-
-    .chat-body {
-      flex: 1;
-      padding: 1rem;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 0.85rem;
-    }
-
-    .msg {
-      max-width: 85%;
-      padding: 0.75rem 1rem;
-      border-radius: 10px;
-      font-size: 0.9rem;
-      line-height: 1.45;
-      word-break: break-word;
-      white-space: pre-wrap;
-    }
-
-    .msg.user {
-      align-self: flex-end;
-      background: var(--user-msg);
-      color: #fff;
-    }
-
-    .msg.bot {
-      align-self: flex-start;
-      background: var(--bot-msg);
-      color: var(--text);
-      border: 1px solid rgba(255,255,255,0.05);
-    }
-
-    .chat-footer {
-      padding: 0.85rem 1rem;
-      border-top: 1px solid var(--border);
-      background: var(--card);
-      display: flex;
-      gap: 0.5rem;
-    }
-
-    .chat-input {
-      flex: 1;
-      background: var(--code-bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--text);
-      padding: 0.65rem 0.85rem;
-      font-size: 0.9rem;
-      outline: none;
-    }
-
-    /* Responsive for Small Screens */
-    @media (max-width: 900px) {
-      .app-layout {
-        flex-direction: column;
-        height: auto;
-        overflow: visible;
-      }
-      .pane-generator, .pane-chat {
-        width: 100%;
-        height: 600px;
-      }
     }
   </style>
 </head>
 <body>
 
-  <header>
-    <div>
-      <h1>TriStack AI & Assistant</h1>
-      <p>Multi-language code generator with live contextual AI assistance</p>
-    </div>
-  </header>
+  <div class="container">
+    <header>
+      <h1>AI Multi-Code Generator</h1>
+      <p>Describe an idea to generate HTML, Java, and Python code.</p>
+    </header>
 
-  <div class="app-layout">
-    <!-- LEFT HALF: CODE GENERATOR -->
-    <div class="pane-generator">
-      <div class="card">
-        <textarea id="ideaInput" placeholder="e.g., A 3D car parking game using Three.js with simple keyboard controls..."></textarea>
-        <div class="btn-row">
-          <span class="status-text" id="statusMsg">Ready</span>
-          <button class="primary-btn" id="genBtn" onclick="generateCode()">Generate Code</button>
-        </div>
-      </div>
-
-      <div class="output-card">
-        <div class="tabs">
-          <button class="tab-btn active" onclick="switchTab('html')">HTML</button>
-          <button class="tab-btn" onclick="switchTab('java')">Java</button>
-          <button class="tab-btn" onclick="switchTab('python')">Python</button>
-        </div>
-
-        <div id="tab-html" class="tab-panel active">
-          <button class="copy-btn" onclick="copySnippet('htmlCode')">Copy</button>
-          <pre><code id="htmlCode"><!-- Generated HTML will appear here --></code></pre>
-        </div>
-
-        <div id="tab-java" class="tab-panel">
-          <button class="copy-btn" onclick="copySnippet('javaCode')">Copy</button>
-          <pre><code id="javaCode">// Generated Java will appear here</code></pre>
-        </div>
-
-        <div id="tab-python" class="tab-panel">
-          <button class="copy-btn" onclick="copySnippet('pythonCode')">Copy</button>
-          <pre><code id="pythonCode"># Generated Python will appear here</code></pre>
-        </div>
+    <div class="input-card">
+      <textarea id="ideaInput" placeholder="e.g., A simple stopwatch with start, stop, and reset buttons..."></textarea>
+      <div class="btn-row">
+        <span class="status-text" id="statusMsg">Ready</span>
+        <button class="generate-btn" id="genBtn" onclick="generateCode()">Generate Code</button>
       </div>
     </div>
 
-    <!-- RIGHT HALF: CHAT ASSISTANT -->
-    <div class="pane-chat">
-      <div class="chat-header">
-        <span>AI Problem Solver & Assistant</span>
-        <span class="status-text" style="color: #38bdf8;">Reads Left HTML Code</span>
+    <div class="output-card">
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('html')">HTML</button>
+        <button class="tab-btn" onclick="switchTab('java')">Java</button>
+        <button class="tab-btn" onclick="switchTab('python')">Python</button>
       </div>
 
-      <div class="chat-body" id="chatBody">
-        <div class="msg bot">Hello! Generate code on the left, and if you run into any issues, errors, or want explanations/modifications, ask me here. I can inspect your generated HTML code in real time.</div>
+      <div id="tab-html" class="tab-panel active">
+        <button class="copy-btn" onclick="copySnippet('htmlCode')">Copy</button>
+        <pre><code id="htmlCode"><!-- Generated HTML will appear here --></code></pre>
       </div>
 
-      <div class="chat-footer">
-        <input type="text" id="chatInput" class="chat-input" placeholder="Ask a question or report a bug in the code..." onkeydown="if(event.key==='Enter') sendChatMessage()" />
-        <button class="primary-btn" id="chatBtn" onclick="sendChatMessage()">Send</button>
+      <div id="tab-java" class="tab-panel">
+        <button class="copy-btn" onclick="copySnippet('javaCode')">Copy</button>
+        <pre><code id="javaCode">// Generated Java will appear here</code></pre>
+      </div>
+
+      <div id="tab-python" class="tab-panel">
+        <button class="copy-btn" onclick="copySnippet('pythonCode')">Copy</button>
+        <pre><code id="pythonCode"># Generated Python will appear here</code></pre>
       </div>
     </div>
   </div>
 
   <script>
     const GROQ_API_KEY = "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";
-    let chatHistory = [];
 
     function switchTab(lang) {
       document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -367,8 +236,7 @@
       });
     }
 
-    /* Core Groq API Request */
-    async function callGroqAPI(messages, temperature = 0.2) {
+    async function requestGroqCode(language, idea) {
       const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -377,33 +245,28 @@
         },
         body: JSON.stringify({
           model: "openai/gpt-oss-120b",
-          messages: messages,
-          temperature: temperature
+          messages: [
+            {
+              role: "system",
+              content: "You are an expert programming assistant. Return ONLY valid, executable raw code for the requested language. Do NOT write conversational explanations, and do NOT enclose output in markdown blocks or backticks."
+            },
+            {
+              role: "user",
+              content: `Write complete, self-contained, working ${language} code for: "${idea}".`
+            }
+          ],
+          temperature: 0.2
         })
       });
 
       const data = await response.json();
+
       if (data.error) {
         throw new Error(data.error.message);
       }
-      return data.choices?.[0]?.message?.content?.trim() || "";
-    }
 
-    /* Code Generator Handler */
-    async function requestGroqCode(language, idea) {
-      const messages = [
-        {
-          role: "system",
-          content: "You are an expert programming assistant. Return ONLY valid, executable raw code for the requested language. Do NOT write explanations and do NOT wrap code with markdown backticks."
-        },
-        {
-          role: "user",
-          content: `Write complete, self-contained, working ${language} code for: "${idea}".`
-        }
-      ];
-
-      const raw = await callGroqAPI(messages);
-      return raw.replace(/^```[a-zA-Z]*\n?/, "").replace(/\n?```$/, "").trim();
+      let text = data.choices?.[0]?.message?.content?.trim() || "";
+      return text.replace(/^```[a-zA-Z]*\n?/, "").replace(/\n?```$/, "").trim();
     }
 
     async function generateCode() {
@@ -446,61 +309,6 @@
       } finally {
         btn.disabled = false;
         btn.textContent = "Generate Code";
-      }
-    }
-
-    /* Chat Assistant Handler */
-    async function sendChatMessage() {
-      const input = document.getElementById('chatInput');
-      const text = input.value.trim();
-      const chatBody = document.getElementById('chatBody');
-      const chatBtn = document.getElementById('chatBtn');
-
-      if (!text) return;
-
-      // Add user message to UI
-      const userDiv = document.createElement('div');
-      userDiv.className = 'msg user';
-      userDiv.textContent = text;
-      chatBody.appendChild(userDiv);
-
-      input.value = "";
-      chatBtn.disabled = true;
-
-      // Loading bubble
-      const botDiv = document.createElement('div');
-      botDiv.className = 'msg bot';
-      botDiv.textContent = "Thinking...";
-      chatBody.appendChild(botDiv);
-      chatBody.scrollTop = chatBody.scrollHeight;
-
-      // Pull active HTML code to use as context
-      const currentHtml = document.getElementById('htmlCode').innerText;
-
-      const systemPrompt = `You are a helpful software engineering assistant in an interactive code workspace.
-The user is working on an application and may ask questions, report bugs, or request code adjustments.
-Here is the current HTML code generated on the left side:
----
-${currentHtml}
----
-Analyze their question, refer to the code above when relevant, and provide clear solutions and fixes.`;
-
-      chatHistory.push({ role: "user", content: text });
-
-      try {
-        const payload = [
-          { role: "system", content: systemPrompt },
-          ...chatHistory
-        ];
-
-        const responseText = await callGroqAPI(payload, 0.5);
-        botDiv.textContent = responseText;
-        chatHistory.push({ role: "assistant", content: responseText });
-      } catch (err) {
-        botDiv.textContent = "Error: " + err.message;
-      } finally {
-        chatBtn.disabled = false;
-        chatBody.scrollTop = chatBody.scrollHeight;
       }
     }
   </script>
