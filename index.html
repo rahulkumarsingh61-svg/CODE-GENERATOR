@@ -237,36 +237,48 @@
     }
 
     async function requestGroqCode(language, idea) {
-      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${GROQ_API_KEY}`
-        },
-        body: JSON.stringify({
-          model: "llama-3.1-8b-instant",
-          messages: [
-            {
-              role: "system",
-              content: "You are an expert programming assistant. Output complete, working code for the requested language. Do NOT enclose output in markdown blocks or backticks, and omit conversational introductions or summaries."
+      const models = ["llama-3.3-70b-versatile", "llama3-8b-8192"];
+      let lastErr = "";
+
+      for (const model of models) {
+        try {
+          const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${GROQ_API_KEY}`
             },
-            {
-              role: "user",
-              content: `Write complete, self-contained, working ${language} code for: "${idea}".`
-            }
-          ],
-          temperature: 0.2
-        })
-      });
+            body: JSON.stringify({
+              model: model,
+              messages: [
+                {
+                  role: "system",
+                  content: "You are an expert programming assistant. Output complete, working, self-contained code for the requested language. Do NOT wrap output with markdown backticks or fences, and do not add explanatory text."
+                },
+                {
+                  role: "user",
+                  content: `Write complete, self-contained, working ${language} code for: "${idea}".`
+                }
+              ],
+              temperature: 0.2
+            })
+          });
 
-      const data = await response.json();
+          const data = await response.json();
 
-      if (data.error) {
-        throw new Error(data.error.message);
+          if (data.error) {
+            lastErr = data.error.message;
+            continue;
+          }
+
+          let text = data.choices?.[0]?.message?.content?.trim() || "";
+          return text.replace(/^```[a-zA-Z]*\n?/, "").replace(/\n?```$/, "").trim();
+        } catch (err) {
+          lastErr = err.message;
+        }
       }
 
-      let text = data.choices?.[0]?.message?.content?.trim() || "";
-      return text.replace(/^```[a-zA-Z]*\n?/, "").replace(/\n?```$/, "").trim();
+      throw new Error(lastErr || "Failed to generate code.");
     }
 
     async function generateCode() {
@@ -287,7 +299,7 @@
       document.getElementById('pythonCode').textContent = "Generating Python...";
 
       try {
-        status.textContent = "Generating with Groq (Llama 3.1)...";
+        status.textContent = "Generating code with Groq...";
 
         const [htmlCode, javaCode, pythonCode] = await Promise.all([
           requestGroqCode("HTML/CSS/JS (single file)", idea),
